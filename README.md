@@ -6,7 +6,7 @@ Um simulador do jogo Sky Children of the Light no Discord em Python. A ideia ser
 
 - [Comandos](#comandos)
 - [Contribuindo](#contribuindo)
-  - [Ideias e discussões](#ideias-e-discussoes)
+  - [Ideias e discussões](#ideias-e-discussões)
   - [Programando](#programando)
   - [Reportando bugs](#reportando-bugs)
   - [Triagem de relatórios de bug](#Triagem-relatorios-de-bug)
