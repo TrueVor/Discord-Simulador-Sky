@@ -295,6 +295,10 @@ class Sky(commands.Cog):
     async def status(self, ctx):
         with open('sky.json', 'r') as f:
             sky = json.load(f)
+        checa = await checando_usuario(sky, ctx.message.author)
+        if checa == False:
+            await ctx.send(f'{ctx.message.author.mention}, você ainda não criou seu personagem utilizando o comando `iniciar`')
+            return
         nivel = sky[f'{ctx.message.author.id}']['nivel']
         path = "./images/" + f'{nivel}' + ".png"
         files = discord.File(path, filename="image.png")
