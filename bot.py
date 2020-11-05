@@ -1,10 +1,15 @@
 import discord
+import asyncio
+import asyncpg
 import random
 import logging
+import schedule
 import json
+import time
 import re
+import os
+from datetime import datetime, timedelta
 from discord.ext import commands, tasks
-from datetime import datetime
 from itertools import cycle
 
 logging.basicConfig(level=logging.INFO)
@@ -46,6 +51,15 @@ async def unload(ctx, extension):
     client.unload_extension(f'cogs.{extension}')
     msg = await ctx.send(f'cog {extension} descarregada')
     print(f'cog {extension} descarregada')
+    await msg.delete(delay=3)
+
+@client.command()
+@commands.has_permissions(administrator=True)
+async def reload(ctx, extension):
+    await ctx.message.delete()
+    client.reload_extension(f'cogs.{extension}')
+    msg = await ctx.send(f'cog {extension} recarregada')
+    print(f'cog {extension} recarregada')
     await msg.delete(delay=3)
 
 
