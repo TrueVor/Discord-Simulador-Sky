@@ -62,6 +62,15 @@ async def reload(ctx, extension):
     print(f'cog {extension} recarregada')
     await msg.delete(delay=3)
 
+@client.command()
+@commands.has_permissions(administrator=True)
+async def reload(ctx, extension):
+    await ctx.message.delete()
+    client.reload_extension(f'cogs.{extension}')
+    msg = await ctx.send(f'cog {extension} recarregada')
+    print(f'cog {extension} recarregada')
+    await msg.delete(delay=3)
+
 
 client.load_extension(f'cogs.sky')
 
