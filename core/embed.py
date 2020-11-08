@@ -3,6 +3,12 @@ import asyncio
 
 # embedding: Autor, Título, Conteúdo{, Footer, Thumbnail, Imagem}
 async def embedding(autor, titulo, conteudo, footer='', thumbnail='', imagem='', cor=0xffffff):
+    """embedding(autor, titulo, conteudo[, footer[, thumbnail[, imagem[, cor]]]])
+
+    As variaveis Autor, Titulo e Conteudo são necessárias.
+    Footer, Thumbnail e Imagem podem ser string vazias. Se forem, serão ignoradas.
+    Cor default é branco (0xffffff)
+    """
     embed = discord.Embed(
         title = titulo,
         description = conteudo,

@@ -10,8 +10,9 @@ import psycopg2.extras
 import os
 from discord.ext import tasks, commands
 from datetime import datetime, timedelta
-from core.iniciar import iniciando, checando_usuario, checando_db # pylint: disable=import-error
+from core.iniciar import checando_db, iniciando # pylint: disable=import-error
 from core.embed import embedding, embed_menu # pylint: disable=import-error
+from core.functions import eq_vel # pylint: disable=import-error
 
 tempo_farm = [0, 1800, 5100, 3100, 3500, 3200, 2700]
 ceras_farm = [0, 0.14, 4.33, 3.73, 3.85, 4.25, 0.89]
@@ -25,15 +26,13 @@ class Sky(commands.Cog):
 
     def __init__(self, client):
         self.client = client
-        self.update_sky.add_exception_type(asyncpg.PostgresConnectionError)
+        self.update_sky.add_exception_type(asyncpg.PostgresConnectionError) # pylint: disable=no-member
         self.update_sky.start()
         self.schedules.add_exception_type(asyncpg.PostgresConnectionError)
         self.schedules.start()
         # DATABASE_URL = postgres://<username>:<password>@<host>/<dbname>
-        if os.environ.get('DATABASE_URL') != None:
-            data = os.environ['DATABASE_URL']
-        else:
-            data = "postgres://<username>:<password>@<host>/<dbname>"
+        # if os.environ.get('DATABASE_URL') != None: # 
+        data = os.environ['DATABASE_URL']
         self.db = psycopg2.connect(data, sslmode='require')
         self.db_cursor = self.db.cursor(cursor_factory=psycopg2.extras.DictCursor)
         self.db_cursor.execute("""
@@ -197,8 +196,9 @@ class Sky(commands.Cog):
                 farm_comp = ['', '', '', '', '', '', '']
                 np = users['nivel']
                 la_total = users['total_luzes']
+                eq = eq_vel(np)
                 while i <= 6:
-                    tt[i] = round(tempo_farm[i] - ( tempo_farm[i]*(np*0.05) ))
+                    tt[i] = round((tempo_farm[i] - tempo_farm[i]*eq))
                     if i > 0:
                         la[i] = luzes[f'{id_mapas[i]}']
                         if farm[f'{id_mapas[i]}'] == True:
@@ -208,7 +208,7 @@ class Sky(commands.Cog):
                 embed.set_author(name=ctx.message.author.name, icon_url=ctx.message.author.avatar_url)
                 if np > 0:
                     embed.add_field(name='\u200b', value=f'\n**Nível {np}** ({la_total} Luzes Aladas)', inline=False)
-                    embed.add_field(name=f'*{np*5}% mais veloz*', value='\u200b', inline=False)
+                    embed.add_field(name=f'*{round(eq*100, 2)}% mais veloz*', value='\u200b', inline=False)
                 embed.add_field(name=f'(1) Ilha {la[1]}/{luzes_reinos[1]} Luzes {farm_comp[1]}', value=display_time(tt[1]), inline=False)
                 embed.add_field(name=f'(2) Campina {la[2]}/{luzes_reinos[2]} Luzes {farm_comp[2]}', value=display_time(tt[2]), inline=False)
                 embed.add_field(name=f'(3) Floresta {la[3]}/{luzes_reinos[3]} Luzes {farm_comp[3]}', value=display_time(tt[3]), inline=False)
@@ -344,7 +344,8 @@ class Sky(commands.Cog):
             disponibilidade = '__**Disponível para farmar**__'
         total_luzes = users['total_luzes']
         nome_conta = users['nome']
-        titulo = f'{nome_conta} - Nível {nivel}'
+        vel = eq_vel(nivel, True)
+        titulo = f'{nome_conta} - Nível {nivel} ({vel}% mais veloz)'
         conteudo = f'**{total_luzes}/{exp_nivel[nivel]}** Luzes Aladas\n\u200b\n{disponibilidade}\nVelas: **{velas}** | Velas Eden: **{velas_eden}**'
         frases_inspiradoras = [
             'Se chover, procure o Arco-Íris\nSe escurecer, procure as Estrelas',
@@ -443,8 +444,9 @@ async def eventos_farm(self, user):
 
     self.db_cursor.execute('SELECT * FROM luzes WHERE id=%s', (str(user['id']),))
     luzes = self.db_cursor.fetchone()
-
+    luz_reino = luzes[f'{id_mapas[id_farm]}']
     luzes_falta = luzes_reinos[id_farm] - luzes[f'{id_mapas[id_farm]}']
+    print(f'\n{luz_reino} | {luzes_reinos[id_farm]} | {luzes_falta}\n')
     ll = 0
     ni = user['nivel']
     # 100% de chance de acontecer coletas de luzes
@@ -476,7 +478,7 @@ async def eventos_farm(self, user):
     embed.add_field(name='Ceras Coletadas', value=f'{qnt_ceras} ceras' , inline=False)
 
     self.db_cursor.execute('UPDATE luzes SET {} = {} + %s WHERE id=%s;'.format(id_mapas[id_farm], id_mapas[id_farm]), (ll, str(user['id']),))
-    self.db_cursor.execute('UPDATE users SET velas = velas + %s, total_luzes = total_luzes + %s, nivel = %s WHERE id=%s;', (qnt_ceras, ll, ni, str(user['id']),))
+    self.db_cursor.execute('UPDATE users SET velas = velas + %s, total_luzes = total_luzes + %s, nivel = %s WHERE id=%s;', (qnt_ceras, ll, ni-1, str(user['id']),))
     self.db.commit()
 
     iid = user['id']

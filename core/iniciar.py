@@ -1,7 +1,11 @@
+import discord
 import psycopg2
 from core.embed import embedding # pylint: disable=import-error
 
 async def iniciando(self, ctx):
+    '''
+    Inicia as variáveis do personagem no SQL
+    '''
     # ID, nome, Velas, Velas Eden, Total Luzes, Nível, Var. Farmando e Var. Farmando_Tempo
     self.db_cursor.execute('INSERT INTO users VALUES (%s,%s,%s,%s,%s,%s,%s,%s)',
     (ctx.author.id, ctx.author.name, 0.0, 0.0, 0, 0, 0, 0,))
@@ -22,14 +26,11 @@ async def iniciando(self, ctx):
     embed.set_author(name='', icon_url='')
     await ctx.send(embed=embed)
 
-async def checando_usuario(users, user):
-    if not f'{user.id}' in users:
-        return False
-    return True
-
 async def checando_db(self, ctx, db='users'):
     self.db_cursor.execute('SELECT * FROM {} WHERE id=%s'.format(db), (str(ctx.message.author.id),))
     response = self.db_cursor.fetchone()
     if not response:
         return False
     return True
+
+__all__ = 'iniciando', 'checando_usuario', 'checando_db'
